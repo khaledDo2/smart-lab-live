@@ -76,7 +76,8 @@ class SerialController extends Controller
 
         $serial = DB::table('serials')->where('serial', $request->serial)->where('active', true)->first();
         if ($serial) {
-            if ($uiid == $serial->uiid  || $bios == $serial->bios) {
+            // if ($uiid == $serial->uiid  || $bios == $serial->bios) {
+            if ($uiid == $serial->uiid) {
                 return response(['status' => true, 'code' => KEY_VERFIY, 'message' => 'Valid'], Response::HTTP_OK);
             }
         }
@@ -96,7 +97,8 @@ class SerialController extends Controller
 
         if ($serial) {
             // Serial not used
-            if (!$serial->uiid && !$serial->bios) {
+            // if (!$serial->uiid && !$serial->bios) {
+            if (!$serial->uiid) {
                 DB::table('serials')->where('id', $serial->id)->update(
                     [
                         'uiid'           => $uiid,
@@ -106,11 +108,12 @@ class SerialController extends Controller
                         'deviceUsername' => $deviceUsername
                     ]
                 );
-                return response(['status' => true, 'code' => KEY_VERFIY, 'type'=> $serial->type, 'message' => 'Valid'], Response::HTTP_OK);
+                return response(['status' => true, 'code' => KEY_VERFIY, 'type' => $serial->type, 'message' => 'Valid'], Response::HTTP_OK);
             }
             // Check If The Same Device try to insert the serial again
-            else if ($uiid == $serial->uiid  || $bios == $serial->bios) {
-                return response(['status' => true, 'code' => KEY_VERFIY, 'type'=> $serial->type, 'message' => 'Valid - Used Again'], Response::HTTP_OK);
+            // else if ($uiid == $serial->uiid  || $bios == $serial->bios) {
+            else if ($uiid == $serial->uiid) {
+                return response(['status' => true, 'code' => KEY_VERFIY, 'type' => $serial->type, 'message' => 'Valid - Used Again'], Response::HTTP_OK);
             }
 
             return response(['status' => false, 'message' => 'Serial already used'], Response::HTTP_ALREADY_REPORTED);
