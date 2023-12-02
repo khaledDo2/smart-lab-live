@@ -158,7 +158,7 @@ class SerialController extends Controller
             return response(['status' => false, 'message' => 'Serial already used on a different device.'], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
         } catch (ModelNotFoundException $e) {
             // Handle the not found exception here
-            return response(['status' => false, 'message' => 'Serial not found.'], Response::HTTP_NOT_FOUND);
+            return response(['status' => false, 'message' => 'Serial not found.'], Response::HTTP_OK);
         } catch (ValidationException $e) {
             return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
