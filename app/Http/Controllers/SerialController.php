@@ -84,7 +84,7 @@ class SerialController extends Controller
                 ->firstOrFail();
 
             if ($this->isSerialExpired($serial)) {
-                throw new ValidationException('Serial has expired.');
+                return response(['status' => false, 'message' => 'Serial has expired.'], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
             }
 
             if ($request->uiid == $serial->uiid) {
@@ -92,11 +92,11 @@ class SerialController extends Controller
                     'status'  => true,
                     'code'    => KEY_VERIFY,
                     'message' => 'Valid',
-                    'expiry_date' => $serial->expiry_date,
+                    'expiryDate' => $serial->expiryDate,
                 ], Response::HTTP_OK);
             }
 
-            throw new ValidationException('Invalid Serial - Mismatched Device Unique.');
+            return response(['status' => false, 'message' => 'Invalid Serial - Mismatched Device Unique.'], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
         } catch (\Exception $e) {
             return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
         }
@@ -122,7 +122,7 @@ class SerialController extends Controller
                 ->firstOrFail();
 
             if ($this->isSerialExpired($serial)) {
-                throw new ValidationException('Serial has expired.');
+                return response(['status' => false, 'message' => 'Serial has expired.'], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
             }
 
             if (!$serial->uiid) {
@@ -139,7 +139,7 @@ class SerialController extends Controller
                     'code'   => KEY_VERIFY,
                     'type'   => $serial->type,
                     'message' => 'Valid',
-                    'expiry_date' => $serial->expiry_date,
+                    'expiryDate' => $serial->expiryDate,
 
                 ], Response::HTTP_OK);
             } elseif ($request->uiid == $serial->uiid) {
@@ -148,11 +148,10 @@ class SerialController extends Controller
                     'code'   => KEY_VERIFY,
                     'type'   => $serial->type,
                     'message' => 'Valid - Used Again',
-                    'expiry_date' => $serial->expiry_date,
+                    'expiryDate' => $serial->expiryDate,
                 ], Response::HTTP_OK);
             }
-
-            throw new ValidationException('Serial already used on a different device.');
+            return response(['status' => false, 'message' => 'Serial already used on a different device.'], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
         } catch (\Exception $e) {
             return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_OK);
         }
