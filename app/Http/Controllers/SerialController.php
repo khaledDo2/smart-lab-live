@@ -109,8 +109,8 @@ class SerialController extends Controller
                 'serial'          => 'required',
                 // 'uiid'            => 'required',
                 // 'bios'            => 'required',
-                'model'           => 'required',
-                'sku'             => 'required',
+                // 'model'           => 'required',
+                // 'sku'             => 'required',
                 // 'deviceUsername'   => 'required',
             ]);
 
@@ -153,7 +153,7 @@ class SerialController extends Controller
             }
             return response(['status' => false, 'message' => 'Serial already used on a different device.'], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
         } catch (ValidationException $e) {
-            return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_OK);
+            return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
          catch (\Exception $e) {
             return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_OK);
