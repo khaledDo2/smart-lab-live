@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 const KEY_VERIFY = 'smLobo21_ABC_KH';
 
@@ -97,6 +98,9 @@ class SerialController extends Controller
             }
 
             return response(['status' => false, 'message' => 'Invalid Serial - Mismatched Device Unique.'], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
+        } catch (ModelNotFoundException $e) {
+            // Handle the not found exception here
+            return response(['status' => false, 'message' => 'Serial not found.'], Response::HTTP_NOT_FOUND);
         } catch (\Exception $e) {
             return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
         }
@@ -152,10 +156,12 @@ class SerialController extends Controller
                 ], Response::HTTP_OK);
             }
             return response(['status' => false, 'message' => 'Serial already used on a different device.'], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
+        } catch (ModelNotFoundException $e) {
+            // Handle the not found exception here
+            return response(['status' => false, 'message' => 'Serial not found.'], Response::HTTP_NOT_FOUND);
         } catch (ValidationException $e) {
             return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
-        }
-         catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_OK);
         }
     }
