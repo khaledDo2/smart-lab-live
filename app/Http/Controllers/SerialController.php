@@ -127,8 +127,8 @@ class SerialController extends Controller
 
             if (!$serial->uiid) {
                 DB::table('serials')->where('id', $serial->id)->update([
-                    'uiid'           => $request->uiid,
-                    'bios'           => $request->bios,
+                    'uiid'           => $uiid,
+                    'bios'           => $bios,
                     'model'          => $request->model,
                     'sku'            => $request->sku,
                     'deviceUsername' => $request->deviceUsername,
@@ -142,7 +142,7 @@ class SerialController extends Controller
                     'expiryDate' => $serial->expiryDate,
 
                 ], Response::HTTP_OK);
-            } elseif ($request->uiid == $serial->uiid) {
+            } elseif ($uiid == $serial->uiid) {
                 return response([
                     'status' => true,
                     'code'   => KEY_VERIFY,
@@ -152,7 +152,10 @@ class SerialController extends Controller
                 ], Response::HTTP_OK);
             }
             return response(['status' => false, 'message' => 'Serial already used on a different device.'], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
-        } catch (\Exception $e) {
+        } catch (ValidationException $e) {
+            return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_OK);
+        }
+         catch (\Exception $e) {
             return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_OK);
         }
     }
