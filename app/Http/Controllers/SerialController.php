@@ -111,7 +111,7 @@ class SerialController extends Controller
                 // 'bios'            => 'required',
                 'model'           => 'required',
                 'sku'             => 'required',
-                'deviceUsername'   => 'required',
+                // 'deviceUsername'   => 'required',
             ]);
 
             $uiid = (str_replace(' ', '', $request->uiid)) ? $request->uiid : 'XX##UIID' . rand(1000000, 100000000);
