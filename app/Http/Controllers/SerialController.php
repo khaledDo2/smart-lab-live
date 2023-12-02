@@ -6,8 +6,9 @@ use App\Models\Serial;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
-const KEY_VERFIY = 'smLobo21_ABC_KH';
+const KEY_VERIFY = 'smLobo21_ABC_KH';
 
 class SerialController extends Controller
 {
@@ -71,55 +72,104 @@ class SerialController extends Controller
 
     public function check(Request $request)
     {
-        $uiid = $request->uiid;
-        $bios = $request->bios;
+        try {
+            $this->validate($request, [
+                'serial' => 'required',
+                'uiid'   => 'required',
+                'bios'   => 'required',
+            ]);
 
-        $serial = DB::table('serials')->where('serial', $request->serial)->where('active', true)->first();
-        if ($serial) {
-            // if ($uiid == $serial->uiid  || $bios == $serial->bios) {
-            if ($uiid == $serial->uiid) {
-                return response(['status' => true, 'code' => KEY_VERFIY, 'message' => 'Valid'], Response::HTTP_OK);
+            $serial = Serial::where('serial', $request->serial)
+                ->where('active', true)
+                ->firstOrFail();
+
+            if ($this->isSerialExpired($serial)) {
+                throw new ValidationException('Serial has expired.');
             }
-        }
 
-        return response(['status' => false, 'message' => 'Invalid Serial - Expired licence'], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
+            if ($request->uiid == $serial->uiid) {
+                return response([
+                    'status'  => true,
+                    'code'    => KEY_VERIFY,
+                    'message' => 'Valid',
+                    'expiry_date' => $serial->expiry_date,
+                ], Response::HTTP_OK);
+            }
+
+            throw new ValidationException('Invalid Serial - Mismatched Device Unique.');
+        } catch (\Exception $e) {
+            return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
+        }
     }
 
     public function active(Request $request)
     {
-        $uiid = (str_replace(' ', '', $request->uiid)) ? $request->uiid : 'XX##UIID' . rand(1000000, 100000000);
-        $bios = (str_replace(' ', '', $request->bios)) ? $request->bios : 'XX##BIOS' . rand(1000000, 100000000);
-        $model = $request->model;
-        $sku = $request->sku;
-        $deviceUsername = $request->deviceUsername;
+        try {
+            $this->validate($request, [
+                'serial'          => 'required',
+                // 'uiid'            => 'required',
+                // 'bios'            => 'required',
+                'model'           => 'required',
+                'sku'             => 'required',
+                'deviceUsername'   => 'required',
+            ]);
 
-        $serial =  DB::table('serials')->where('serial', $request->serial)->where('active', true)->first();
+            $uiid = (str_replace(' ', '', $request->uiid)) ? $request->uiid : 'XX##UIID' . rand(1000000, 100000000);
+            $bios = (str_replace(' ', '', $request->bios)) ? $request->bios : 'XX##BIOS' . rand(1000000, 100000000);
 
-        if ($serial) {
-            // Serial not used
-            // if (!$serial->uiid && !$serial->bios) {
+            $serial = Serial::where('serial', $request->serial)
+                ->where('active', true)
+                ->firstOrFail();
+
+            if ($this->isSerialExpired($serial)) {
+                throw new ValidationException('Serial has expired.');
+            }
+
             if (!$serial->uiid) {
-                DB::table('serials')->where('id', $serial->id)->update(
-                    [
-                        'uiid'           => $uiid,
-                        'bios'           => $bios,
-                        'model'          => $model,
-                        'sku'            => $sku,
-                        'deviceUsername' => $deviceUsername
-                    ]
-                );
-                return response(['status' => true, 'code' => KEY_VERFIY, 'type' => $serial->type, 'message' => 'Valid'], Response::HTTP_OK);
-            }
-            // Check If The Same Device try to insert the serial again
-            // else if ($uiid == $serial->uiid  || $bios == $serial->bios) {
-            else if ($uiid == $serial->uiid) {
-                return response(['status' => true, 'code' => KEY_VERFIY, 'type' => $serial->type, 'message' => 'Valid - Used Again'], Response::HTTP_OK);
+                DB::table('serials')->where('id', $serial->id)->update([
+                    'uiid'           => $request->uiid,
+                    'bios'           => $request->bios,
+                    'model'          => $request->model,
+                    'sku'            => $request->sku,
+                    'deviceUsername' => $request->deviceUsername,
+                ]);
+
+                return response([
+                    'status' => true,
+                    'code'   => KEY_VERIFY,
+                    'type'   => $serial->type,
+                    'message' => 'Valid',
+                    'expiry_date' => $serial->expiry_date,
+
+                ], Response::HTTP_OK);
+            } elseif ($request->uiid == $serial->uiid) {
+                return response([
+                    'status' => true,
+                    'code'   => KEY_VERIFY,
+                    'type'   => $serial->type,
+                    'message' => 'Valid - Used Again',
+                    'expiry_date' => $serial->expiry_date,
+                ], Response::HTTP_OK);
             }
 
-            return response(['status' => false, 'message' => 'Serial already used'], Response::HTTP_ALREADY_REPORTED);
+            throw new ValidationException('Serial already used on a different device.');
+        } catch (\Exception $e) {
+            return response(['status' => false, 'message' => $e->getMessage()], Response::HTTP_OK);
         }
-        return response(['status' => false, 'message' => 'Invalid Serial'], Response::HTTP_OK);
     }
+
+
+    /**
+     * Check if a serial has expired.
+     *
+     * @param  \App\Models\Serial  $serial
+     * @return bool
+     */
+    private function isSerialExpired(Serial $serial)
+    {
+        return $serial->expiryDate && now()->greaterThan($serial->expiryDate);
+    }
+
 
     // -------------for delete later-----------
     public function check_old(Request $request)
