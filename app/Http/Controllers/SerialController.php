@@ -77,7 +77,7 @@ class SerialController extends Controller
             $this->validate($request, [
                 'serial' => 'required',
                 'uiid'   => 'required',
-                'bios'   => 'required',
+                // 'bios'   => 'required',
             ]);
 
             $serial = Serial::where('serial', $request->serial)
