@@ -94,6 +94,7 @@ class SerialController extends Controller
                     'code'    => KEY_VERIFY,
                     'message' => 'Valid',
                     'expiryDate' => $serial->expiryDate,
+                    'support_tax' => $serial->support_tax
                 ], Response::HTTP_OK);
             }
 
@@ -144,6 +145,7 @@ class SerialController extends Controller
                     'type'   => $serial->type,
                     'message' => 'Valid',
                     'expiryDate' => $serial->expiryDate,
+                    'support_tax' => $serial->support_tax,
 
                 ], Response::HTTP_OK);
             } elseif ($uiid == $serial->uiid) {
@@ -153,6 +155,7 @@ class SerialController extends Controller
                     'type'   => $serial->type,
                     'message' => 'Valid - Used Again',
                     'expiryDate' => $serial->expiryDate,
+                    'support_tax' => $serial->support_tax,
                 ], Response::HTTP_OK);
             }
             return response(['status' => false, 'message' => 'Serial already used on a different device.'], Response::HTTP_NON_AUTHORITATIVE_INFORMATION);
